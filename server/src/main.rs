@@ -44,8 +44,6 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
 
         println!("{:?}\n", get_secret.await?.raw_secret_bytes());
     }
-
-    Ok(())
 }
 
 fn key_generation(rng: &mut ThreadRng) -> Vec<u8> {

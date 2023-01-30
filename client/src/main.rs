@@ -2,8 +2,8 @@ use rand_core::OsRng;
 use k256::{EncodedPoint, PublicKey, ecdh::EphemeralSecret};
 use std::io as sio;
 use tokio::net::TcpStream;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-
+use tokio::io::{AsyncReadExt, AsyncWriteExt, WriteHalf};
+use std::sync::{Arc, Mutex};
 mod commands;
 use commands::Command;
 
@@ -13,7 +13,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let (mut rd, mut wr) = tokio::io::split(socket);
 
-    let get_secret = tokio::spawn(async move{
+    let get_secret = tokio::spawn(async move{        
         let client_secret = EphemeralSecret::random(OsRng);
 
         let client_public = EncodedPoint::from(client_secret.public_key());
@@ -34,7 +34,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         client_secret.diffie_hellman(&server_public)
     });
 
-    println!("{:?}\n", get_secret.await?.raw_secret_bytes());
+    get_secret.await?;
 
-    Ok(())
+    loop{
+        let mut command = String::new();
+
+        sio::stdin().read_line(&mut command)?;
+
+        let mut command = command.split_whitespace();
+
+        match Command::command_handler(&command.nth(0).unwrap()) {
+            Some(com) => com.execute(command),
+            None => println!("Command not found!")
+        };
+    }
 }

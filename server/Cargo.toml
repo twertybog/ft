@@ -12,6 +12,7 @@ f2b = {git = "ssh://git@github.com/twertybog/f2b.git"}
 aes = "0.8.2"
 rand_core = "0.6.4"
 k256 = "0.12.0"
+sha2 = "0.10.6"
 
 
 [profile.release]
