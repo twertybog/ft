@@ -1,3 +1,6 @@
+use tokio::{fs::read_dir};
+use tokio::io::{ReadHalf, WriteHalf};
+use tokio::TcpStream;
 struct Ls;
 
 struct Get;
@@ -34,7 +37,16 @@ impl Command{
 }
 
 impl Exec for Ls{
-    fn command_execution(&self){
+    fn command_execution(&self, rd: ReadHalf<TcpStream>, wr: WriteHalf<TcpStream>){
+        let mut entries = read_dir(".").await?;
+        let mut directories = String::new();
+
+        while let Some(entry) = entries.next_entry().await? {
+            directories.push_str(&entry.path().to_string_lossy()[2..]);
+            directories.push(' ');
+        }
+        println!("{}", directories);
+        
         todo!()
     }
 }
