@@ -1,4 +1,5 @@
 use tokio::sync::Mutex;
+use std::error::Error;
 use std::sync::Arc;
 use tokio::task::JoinHandle;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -8,10 +9,10 @@ use k256::{ecdh::EphemeralSecret, EncodedPoint, PublicKey};
 use rand_core::OsRng;
 use tokio::net::TcpStream;
 
-pub async fn get_secret(stream: Arc<Mutex<TcpStream>>) -> Vec<u8>{
+pub async fn get_secret(stream: Arc<Mutex<TcpStream>>) -> Result<[u8;32], Box<dyn Error>>{
     let secret = tokio::spawn(async move {
         //create server keys
-        let server_secret = EphemeralSecret::random(OsRng);
+        let server_secret = EphemeralSecret::random(&mut OsRng);
 
         let server_public = EncodedPoint::from(server_secret.public_key());
 
@@ -33,8 +34,15 @@ pub async fn get_secret(stream: Arc<Mutex<TcpStream>>) -> Vec<u8>{
         server_secret
             .diffie_hellman(&client_public)
     });
+    
+    // Ok(secret.await?
+    //     .raw_secret_bytes()
+    //     .to_vec())
 
-    secret.await.expect("Secret not generated")
-    .raw_secret_bytes()
-    .to_vec()
+    let mut sec = [0;32];
+    secret.await?.extract::<sha2::Sha256>(None)
+        .expand(&[], &mut sec)
+        .expect("Invalid length!");
+    Ok(sec)
+
 }
