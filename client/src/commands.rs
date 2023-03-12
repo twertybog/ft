@@ -1,10 +1,13 @@
 use std::{process, sync::Arc};
-use tokio::io::{AsyncWriteExt, AsyncReadExt};
+use tokio::io::{AsyncWriteExt};
 use tokio::net::TcpStream;
 use tokio::sync::Mutex;
 
-use crate::{get_secret, enc_data, dec_data};
-
+use crate::{get_secret, enc_data};
+mod ls;
+mod length;
+use ls::get_entries;
+use length::get_length;
 type TcpType = Arc<Mutex<TcpStream>>;
 
 #[derive(Debug)]
@@ -98,42 +101,13 @@ impl Exec for Ls{
             stream.lock().await
                 .write(&message).await
                 .expect("Data not sent!");
-
-            let mut message_len = Vec::new();
-
-            stream.lock().await
-                .read_buf(&mut message_len).await
-                .expect("Length not get!");
+            let mut message_len = get_length(stream.clone()).await;
 
             secret = get_secret(stream.clone())
                 .await.expect("Key not sent!");
 
-            let mut message_len = String::from_utf8_lossy(&message_len)
-                .to_string()
-                .trim()
-                .parse::<i64>()
-                .unwrap_or(0);
-
-            let mut list: Vec<u8> = Vec::new();
-
-            while message_len > 0 {
-                let mut message = Vec::new();
-    
-                stream.lock().await
-                    .read_buf(&mut message).await
-                    .expect("Can't read the message!");
-                let mut counter = 0;
-                while counter < message.len(){
-                    dec_data(secret, &message[counter..counter+16])
-                        .expect("Data not decrypted!")
-                        .into_iter()
-                        .map(|byte| byte).collect_into(&mut list);
-                    counter += 16;
-                }
-                message_len -= 64;
-            }
-
-            println!("{}", String::from_utf8_lossy(&list));
+            println!("{}", String::from_utf8_lossy(
+                &get_entries(stream.clone(), &mut message_len, secret).await));
         });
     }
 }

@@ -1,8 +1,6 @@
-#![allow(unused_imports)]
 #![feature(iter_collect_into)]
 use tokio::sync::Mutex;
 use tokio::net::TcpStream;
-use tokio::io::{AsyncReadExt, AsyncWriteExt, WriteHalf};
 use std::sync::Arc;
 use std::io as sio;
 mod commands;

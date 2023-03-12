@@ -1,7 +1,7 @@
 use std::error::Error;
 use aes::Aes256;
 use aes::cipher::{
-    BlockCipher, BlockEncrypt, BlockDecrypt, KeyInit,
+    BlockEncrypt, KeyInit,
     generic_array::GenericArray,
 };
 

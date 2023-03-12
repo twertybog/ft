@@ -13,7 +13,7 @@ CXXAPPLEARM64=aarch64-apple-darwin20.2-c++
 CCAPPLEX86=x86_64-apple-darwin20.2-cc
 CXXAPPLEX86=x86_64-apple-darwin20.2-c++
 
-all: linux_x86 linux_aarch64 windows_x86 apple_x86 apple_aarch64
+all: linux_x86 linux_aarch64 apple_x86 apple_aarch64
 	
 linux_x86:
 	$(RC) $(FLAGS) x86_64-unknown-linux-musl $(MODE)
