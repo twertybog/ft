@@ -1,7 +1,7 @@
 use aes::Aes256;
 use std::error::Error;
 use aes::cipher::{
-    BlockCipher, BlockEncrypt, BlockDecrypt, KeyInit,
+    BlockDecrypt, KeyInit,
     generic_array::GenericArray,
 };
 pub fn dec_data(key: [u8;32], data: Vec<u8>) -> Result<Vec<u8>, Box<dyn Error>>{

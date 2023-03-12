@@ -3,22 +3,15 @@ use tokio::sync::Mutex;
 use std::error::Error;
 use std::sync::Arc;
 use tokio::net::TcpStream;
-use crate::{get_secret, dec_data, Command};
+use crate::{get_secret, dec_data, Command, get_length};
 
 
 pub async fn get_command(stream: Arc<Mutex<TcpStream>>) -> Result<(), Box<dyn Error>>{
     let command = tokio::spawn(async move {
-        let mut message_len: Vec<u8> = Vec::new();
-
-        stream.lock().await
-            .read_buf(&mut message_len).await
-            .expect("Can't read the message length!");
+        let mut message_len = get_length(stream.clone()).await;
 
         let secret = get_secret(stream.clone()).await
             .expect("Key not recieved!");
-
-        let mut message_len = String::from_utf8_lossy(&message_len)
-            .trim().parse::<i64>().unwrap_or(0);
 
         let mut command: Vec<u8> = Vec::new();
 

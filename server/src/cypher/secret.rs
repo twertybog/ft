@@ -1,10 +1,7 @@
 use tokio::sync::Mutex;
 use std::error::Error;
 use std::sync::Arc;
-use tokio::task::JoinHandle;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use k256::ecdh::SharedSecret;
-use k256::Secp256k1;
 use k256::{ecdh::EphemeralSecret, EncodedPoint, PublicKey};
 use rand_core::OsRng;
 use tokio::net::TcpStream;

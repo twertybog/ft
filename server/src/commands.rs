@@ -1,11 +1,13 @@
-use std::{fs::read_dir, sync::Arc};
-use tokio::io::AsyncWriteExt;
+use std::sync::Arc;
 use tokio::net::TcpStream;
 use tokio::sync::Mutex;
 mod command;
+mod length;
+mod ls;
+pub use length::{send_length, get_length};
+use ls::{send_entries, get_entries};
 pub use command::get_command;
-
-use crate::{get_secret, enc_data};
+use crate::get_secret;
 struct Ls;
 
 struct Get;
@@ -31,43 +33,16 @@ impl Command{
 
 impl Exec for Ls{
     fn command_execution(&self, stream: Arc<Mutex<TcpStream>>){
-        let mut entries = String::new();
-        for entry in read_dir(".").unwrap() {
-            let entry = entry.unwrap();
-            let path = entry.path();
-            
-            entries.push_str(&path.to_str().unwrap_or("./None")[2..]);
-            entries.push(' ');
-        }
-        
+        let entries = get_entries();
         tokio::spawn(async move{
             let entries = entries.as_bytes();
 
-            stream.lock().await
-                .write(format!("{}", entries.len()).as_bytes())
-                .await.expect("Length not sent!");
+            send_length(stream.clone(), entries.len()).await;
 
             let secret = get_secret(stream.clone())
                 .await.expect("Key not generated!");
 
-            let mut counter = 0;
-
-            while entries.len() > counter{
-                let data = 
-                    enc_data(secret, {
-                        if entries.len() < counter + 16{
-                            entries[counter..].to_vec()
-                        }
-                        else {
-                            entries[counter..(counter+16)].to_vec()
-                        }
-                    }).expect("Data not encrypted!");
-                
-                stream.lock().await
-                    .write(&data).await
-                    .expect("Data not sent");
-                counter += 16;
-            }
+            send_entries(entries, secret, stream).await;
         });
     }
 }
