@@ -32,6 +32,6 @@ pub async fn get_command(stream: Arc<Mutex<TcpStream>>) -> Result<(), Box<dyn Er
 
         Command::command_handler(command_split.next().unwrap_or(" "), stream.clone());
     });
-
+    
     Ok(command.await?)
 }

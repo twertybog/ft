@@ -31,15 +31,12 @@ pub async fn get_secret(stream: Arc<Mutex<TcpStream>>) -> Result<[u8;32], Box<dy
         server_secret
             .diffie_hellman(&client_public)
     });
-    
-    // Ok(secret.await?
-    //     .raw_secret_bytes()
-    //     .to_vec())
 
     let mut sec = [0;32];
+    
     secret.await?.extract::<sha2::Sha256>(None)
         .expand(&[], &mut sec)
-        .expect("Invalid length!");
+        .expect("Invalid key length");
     Ok(sec)
 
 }

@@ -18,6 +18,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
         let stream = Arc::new(Mutex::new(socket));
         
-        get_command(stream.clone()).await?;
+        match get_command(stream.clone()).await {
+            Ok(_) => (),
+            Err(_) => continue
+        };
     }
 }
