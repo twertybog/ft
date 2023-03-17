@@ -3,35 +3,36 @@ use tokio::sync::Mutex;
 use std::error::Error;
 use std::sync::Arc;
 use tokio::net::TcpStream;
-use crate::{get_secret, dec_data, Command, get_length};
+use crate::{get_secret, dec_data, Command};
 
 
 pub async fn get_command(stream: Arc<Mutex<TcpStream>>) -> Result<(), Box<dyn Error>>{
     let command = tokio::spawn(async move {
-        let mut message_len = get_length(stream.clone()).await;
+        let _ = stream.lock().await
+            .read_i64().await
+            .expect("Length not get!");
 
         let secret = get_secret(stream.clone()).await
             .expect("Key not recieved!");
 
-        let mut command: Vec<u8> = Vec::new();
+        let mut command = [0;19];
 
-        while message_len > 0 {
-            let mut message = Vec::new();
+        let mut nonce = [0;12];
+            
+        stream.lock().await
+            .read(&mut nonce).await
+            .expect("Can't get nonce!");
 
-            stream.lock().await
-                .read_buf(&mut message).await
-                .expect("Can't read the message!");
-            dec_data(secret, message).expect("Data not decrypted!")
-                .into_iter()
-                .map(|byte| byte).collect_into(&mut command);
-            message_len -= 16;
-        }
-        let command = String::from_utf8_lossy(&command).to_string();
+        stream.lock().await
+            .read(&mut command).await
+            .expect("Can't read the message!");
 
-        let mut command_split = command.split_whitespace();
+        let bytes = dec_data(secret, command.to_vec(), nonce)
+            .expect("Data not decrypted!");
 
-        Command::command_handler(command_split.next().unwrap_or(" "), stream.clone());
+        let command = String::from_utf8_lossy(&bytes).to_string();
+
+        Command::command_handler(&command, stream.clone());
     });
-    
     Ok(command.await?)
 }

@@ -7,9 +7,7 @@ use f2b::b2f;
 use crate::{get_secret, dec_data};
 mod command;
 mod ls;
-mod length;
 use ls::get_entries;
-use length::get_length;
 use command::send_command;
 type TcpType = Arc<Mutex<TcpStream>>;
 
@@ -89,9 +87,6 @@ impl Exec for Get{
                 .read_i64()
                 .await.expect("Can't get file length!"); 
 
-            let secret = get_secret(stream.clone())
-                .await.expect("Key not generated!");
-
             let file = File::options()
                 .write(true)
                 .read(true)
@@ -100,22 +95,25 @@ impl Exec for Get{
                 .expect("File not created!");
 
             while file_len > 0 {
+                let secret = get_secret(stream.clone())
+                    .await.expect("Key not generated!");
+                let mut data = [0;1024];
 
-                let mut data = Vec::new();
+                let mut nonce = [0;12];
 
                 stream.lock().await
-                    .read_buf(&mut data)
+                    .read(&mut nonce)
+                    .await.expect("Can't get nonce!");
+
+                stream.lock().await
+                    .read(&mut data)
                     .await.expect("Can't get data!");
 
-                let mut counter = 0;
-
-                while counter < data.len(){
-                    let bytes = dec_data(secret, &data[counter..counter+16])
+                let bytes = dec_data(secret, data.to_vec(), nonce)
                         .expect("Data not decrypted!");
-                    b2f(&bytes, &file).expect("Not write in file!");
-                    counter += 16;
-                }
-                file_len -= 64;
+                b2f(&bytes, &file).expect("Not write in file!");
+
+                file_len -= 1024;
             }         
         });
     }
@@ -132,7 +130,9 @@ impl Exec for Ls{
         tokio::spawn(async move{
             send_command(stream.clone(), String::from("ls")).await;
 
-            let mut message_len = get_length(stream.clone()).await;
+            let mut message_len = stream.lock().await
+                .read_i64().await
+                .expect("Can't get length");
 
             let secret = get_secret(stream.clone())
                 .await.expect("Key not sent!");

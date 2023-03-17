@@ -5,8 +5,9 @@ use std::sync::Arc;
 use std::io as sio;
 mod commands;
 use commands::Command;
-mod cypher;
-pub use cypher::{get_secret, enc_data, dec_data};
+mod secret;
+pub use secret::get_secret;
+pub use api::{gen_nonce, enc_data, dec_data};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

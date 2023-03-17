@@ -4,10 +4,11 @@ use tokio::{
     sync::Mutex,
     net::TcpListener,
 };
-mod cypher;
+mod secret;
 mod commands;
-pub use cypher::{get_secret, enc_data, dec_data};
-pub use commands::{get_command, Command, get_length, send_length};
+pub use secret::get_secret;
+pub use api::{gen_nonce, enc_data, dec_data};
+pub use commands::{get_command, Command};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {

@@ -8,20 +8,22 @@ pub async fn get_entries(stream: Arc<Mutex<TcpStream>>,
     let mut list: Vec<u8> = Vec::new();
 
     while *message_len > 0 {
-        let mut message = Vec::new();
+        let mut message = [0;1024];
+        let mut nonce = [0;12];
 
         stream.lock().await
-            .read_buf(&mut message).await
+            .read(&mut nonce).await
+            .expect("Can't get nonce!");
+
+        stream.lock().await
+            .read(&mut message).await
             .expect("Can't read the message!");
-        let mut counter = 0;
-        while counter < message.len(){
-            dec_data(secret, &message[counter..counter+16])
+        
+        dec_data(secret, message.to_vec(), nonce)
                 .expect("Data not decrypted!")
                 .into_iter()
                 .map(|byte| byte).collect_into(&mut list);
-            counter += 16;
-        }
-        *message_len -= 64;
+        *message_len -= 1024;
     }
     list
 }

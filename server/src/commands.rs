@@ -4,14 +4,12 @@ use tokio::io::AsyncWriteExt;
 use tokio::{net::TcpStream, io::AsyncReadExt};
 use tokio::sync::Mutex;
 mod command;
-mod length;
 mod ls;
 mod get;
-pub use length::{send_length, get_length};
 use ls::{send_entries, get_entries};
 use get::send_file;
 pub use command::get_command;
-use crate::{get_secret};
+use crate::get_secret;
 struct Ls;
 
 struct Get;
@@ -41,7 +39,10 @@ impl Exec for Ls{
         tokio::spawn(async move{
             let entries = entries.as_bytes();
 
-            send_length(stream.clone(), entries.len()).await;
+            //send_length(stream.clone(), entries.len()).await;
+            stream.lock().await
+                .write_i64(entries.len() as i64).await
+                .expect("Length not sent!");
 
             let secret = get_secret(stream.clone())
                 .await.expect("Key not generated!");
@@ -71,9 +72,9 @@ impl Exec for Get{
                 stream.lock().await
                     .write_u64(file_len)
                     .await.expect("File length not sent!");
-
-                let secret = get_secret(stream.clone()).await
-                    .expect("Key not generated!");
+                println!("{}", file_len);
+                let secret = get_secret(stream.clone())
+                    .await.expect("Key not generated!");
                 send_file(filename, stream.clone(), file_len, secret).await;      
             }
         });

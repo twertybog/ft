@@ -3,27 +3,34 @@ use std::sync::Arc;
 use tokio::io::AsyncWriteExt;
 use tokio::{net::TcpStream, sync::Mutex};
 use std::fs::read_dir;
+use crate::gen_nonce;
 
 pub async fn send_entries(entries: &[u8], secret: [u8; 32], stream: Arc<Mutex<TcpStream>>) {
     let mut counter = 0;
 
     while entries.len() > counter {
+        let nonce = gen_nonce();
+
         let data = enc_data(secret, {
-            if entries.len() < counter + 16 {
+            if entries.len() < counter + 1024 {
                 entries[counter..].to_vec()
             } else {
-                entries[counter..(counter + 16)].to_vec()
+                entries[counter..(counter + 1024)].to_vec()
             }
-        })
+        }, nonce)
         .expect("Data not encrypted!");
 
+        stream.lock().await
+            .write(&nonce).await
+            .expect("Nonce not sent!");
+        
         stream
             .lock()
             .await
             .write(&data)
             .await
             .expect("Data not sent");
-        counter += 16;
+        counter += 1024;
     }
 }
 
