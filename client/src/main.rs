@@ -20,7 +20,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         match Command::command_handler(&command.next().unwrap_or(" ")) {
             Some(com) => {
-                let socket = TcpStream::connect("127.0.0.1:4956").await?;
+                let socket = TcpStream::connect("192.168.0.13:4956").await?;
 
                 let stream = Arc::new(Mutex::new(socket));
                 

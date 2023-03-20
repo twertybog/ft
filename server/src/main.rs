@@ -12,7 +12,7 @@ pub use commands::{get_command, Command};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    let listener = TcpListener::bind("127.0.0.1:4956").await?;
+    let listener = TcpListener::bind("192.168.0.13:4956").await?;
 
     loop {
         let (socket, _address) = listener.accept().await?;

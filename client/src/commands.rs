@@ -104,45 +104,41 @@ impl Exec for Get {
                 .await
                 .expect("Key not generated!");
 
+            let mut errors = Vec::new();
+
             while file_len > 0 {
-                'packet: loop {
-                    let mut nonce = [0; 12];
+                let mut nonce = [0; 12];
 
-                    let mut data = vec![0; 1040];
+                let mut data = vec![0; 16400];
 
-                    stream
-                        .lock()
-                        .await
-                        .read(&mut nonce)
-                        .await
-                        .expect("Can't get nonce!");
+                stream
+                    .lock()
+                    .await
+                    .read(&mut nonce)
+                    .await
+                    .expect("Can't get nonce!");
 
-                    stream
-                        .lock()
-                        .await
-                        .read(&mut data)
-                        .await
-                        .expect("Can't get data!");
-                    
-                    match dec_data(secret, data.to_vec(), nonce) {
-                        Ok(data) => {
-                            b2f(&data, &file).expect("Not write in file!");
-                            stream.lock().await
-                                .write("true".as_bytes()).await
-                                .expect("Success message not sent!");
-                            break 'packet;
-                        }
-                        Err(_) => {
-                            stream.lock().await
-                                .write("false".as_bytes()).await
-                                .expect("Success message not sent!");
-                            continue;
-                        }
-                    };
-                }   
+                stream
+                    .lock()
+                    .await
+                    .read(&mut data)
+                    .await
+                    .expect("Can't get data!");
 
-                file_len -= 1024;
+                let bytes = match dec_data(secret, data.to_vec(), nonce){
+                    Ok(data) => data,
+                    Err(_) => {
+                        println!("Not decrypted: {}", file_len);
+                        errors.push(file_len);
+                        vec![]
+                    }
+                };
+
+                b2f(&bytes, &file).expect("Not write in file!");
+
+                file_len -= 16384;
             }
+            println!("Amount of errors: {}", errors.len());
             println!("Success!")
         });
     }
@@ -181,5 +177,34 @@ impl Exec for Ls {
 impl Exec for Exit {
     fn command_execution(&self, _stream: TcpType, _flag: String) {
         process::exit(0x0100);
+    }
+}
+
+async fn errors_fix(stream: TcpType, mut errors: Vec<i64>, file: File, secret: [u8;32]){
+    while errors.len() > 0{
+        for i in (0..errors.len()).rev(){
+            stream.lock().await
+                .write_i64(errors[i]).await
+                .expect("Packet number not sent!");
+            let mut nonce = [0;12];
+            
+            stream.lock().await
+                .read(&mut nonce).await
+                .expect("Nonce not get!");
+
+            let mut data = [0;16400];
+
+            stream.lock().await
+                .read(&mut data).await
+                .expect("Can't get data");
+
+            let bytes = match dec_data(secret, data.to_vec(), nonce) {
+                Ok(data) => {
+                    errors.remove(i);
+                    data
+                },
+                Err(_) => vec![]
+            };
+        }
     }
 }
