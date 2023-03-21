@@ -1,5 +1,6 @@
 use crate::{dec_data, get_secret};
 use f2b::b2f;
+use tokio::fs::OpenOptions;
 use std::fs::File;
 use std::{process, sync::Arc};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -93,11 +94,12 @@ impl Exec for Get {
                 .await
                 .expect("Can't get file length!");
 
-            let file = File::options()
+            let file = OpenOptions::new()
                 .write(true)
                 .read(true)
                 .create(true)
                 .open(flag)
+                .await
                 .expect("File not created!");
 
             let secret = get_secret(stream.clone())
@@ -134,7 +136,7 @@ impl Exec for Get {
                     }
                 };
 
-                b2f(&bytes, &file).expect("Not write in file!");
+                b2f(&bytes, file.try_clone().await.unwrap()).await.expect("Not write in file!");
 
                 file_len -= 16384;
             }

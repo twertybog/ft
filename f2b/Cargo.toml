@@ -1,0 +1,15 @@
+[package]
+name = "f2b"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tokio = "1.26.0"
+
+[profile.release]
+strip = true
+codegen-units = 1
+opt-level = "s"
+lto = true

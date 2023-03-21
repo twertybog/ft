@@ -13,7 +13,8 @@ pub async fn send_file(
     let mut counter = 0;
 
     while file_len > counter {
-        let data = f2b_part(&filename, counter, 16384).expect("Can't get a part from file!");
+        let data = f2b_part(&filename, counter, 16384).await
+            .expect("Can't get a part from file!");
 
         let nonce = gen_nonce();
 
