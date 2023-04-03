@@ -1,9 +1,10 @@
 use rand::Rng;
-mod decrypt;
-mod encrypt;
+mod crypto;
+mod files;
 
-pub use decrypt::dec_data;
-pub use encrypt::enc_data;
+pub use files::{get_file, send_file};
+pub use crypto::{dec_data, enc_data, send_secret, get_secret};
+
 
 pub fn gen_nonce() -> [u8;12]{
     let mut rng = rand::thread_rng();

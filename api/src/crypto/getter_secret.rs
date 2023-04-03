@@ -13,7 +13,7 @@ pub async fn get_secret(stream: Arc<Mutex<TcpStream>>) -> Result<[u8;32], Box<dy
 
         let server_public = EncodedPoint::from(server_secret.public_key());
 
-        //get client pub key
+        //get pub key
         let mut client_public = [0;33];
 
         stream.lock().await

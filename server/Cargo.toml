@@ -6,11 +6,5 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rand = "0.8.5"
 tokio = {version = "1.24.2", features = ["full", "sync"]}
-rand_core = "0.6.4"
-k256 = {version = "0.13.0", features = ["ecdh"]}
-sha2 = "0.10.6"
-f2b = {path = "../f2b"}
-aes-gcm = "0.10.1"
 api = {path = "../api"}

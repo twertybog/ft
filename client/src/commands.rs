@@ -1,32 +1,26 @@
-use crate::{dec_data, get_secret};
-use f2b::b2f;
-use tokio::fs::OpenOptions;
-use std::fs::File;
+use crate::{GET, LS, PUT};
+use api::{get_file, send_secret, send_file};
 use std::{process, sync::Arc};
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::io::AsyncWriteExt;
 use tokio::net::TcpStream;
 use tokio::sync::Mutex;
 mod command;
 mod ls;
 use command::send_command;
 use ls::get_entries;
+
 type TcpType = Arc<Mutex<TcpStream>>;
 
-#[derive(Debug)]
 struct Ls;
 
-#[derive(Debug)]
 struct Get;
 
-#[derive(Debug)]
 struct Put;
 
-#[derive(Debug)]
 struct Help;
 
 struct Exit;
 
-#[derive(Debug)]
 pub enum Command {
     List,
     Download,
@@ -78,8 +72,7 @@ impl Exec for Help {
 impl Exec for Get {
     fn command_execution(&self, stream: TcpType, flag: String) {
         tokio::spawn(async move {
-            send_command(stream.clone(), String::from("get")).await;
-
+            send_command(stream.clone(), GET).await;
             stream
                 .lock()
                 .await
@@ -87,90 +80,39 @@ impl Exec for Get {
                 .await
                 .expect("Filename not sent!");
 
-            let mut file_len = stream
-                .lock()
-                .await
-                .read_i64()
-                .await
-                .expect("Can't get file length!");
+            get_file(stream.clone(), &flag).await;
 
-            let file = OpenOptions::new()
-                .write(true)
-                .read(true)
-                .create(true)
-                .open(flag)
-                .await
-                .expect("File not created!");
-
-            let secret = get_secret(stream.clone())
-                .await
-                .expect("Key not generated!");
-
-            let mut errors = Vec::new();
-
-            while file_len > 0 {
-                let mut nonce = [0; 12];
-
-                let mut data = vec![0; 16400];
-
-                stream
-                    .lock()
-                    .await
-                    .read(&mut nonce)
-                    .await
-                    .expect("Can't get nonce!");
-
-                stream
-                    .lock()
-                    .await
-                    .read(&mut data)
-                    .await
-                    .expect("Can't get data!");
-
-                let bytes = match dec_data(secret, data.to_vec(), nonce){
-                    Ok(data) => data,
-                    Err(_) => {
-                        println!("Not decrypted: {}", file_len);
-                        errors.push(file_len);
-                        vec![]
-                    }
-                };
-
-                b2f(&bytes, file.try_clone().await.unwrap()).await.expect("Not write in file!");
-
-                file_len -= 16384;
-            }
-            println!("Amount of errors: {}", errors.len());
             println!("Success!")
         });
     }
 }
 
 impl Exec for Put {
-    fn command_execution(&self, _stream: TcpType, _flag: String) {
-        todo!()
+    fn command_execution(&self, stream: TcpType, flag: String) {
+        tokio::spawn(async move{
+            send_command(stream.clone(), PUT).await;
+
+            stream.lock().await
+                .write(&flag.as_bytes()).await
+                .expect("FIlename not sent");
+
+            send_file(&flag, stream.clone()).await;
+
+            println!("Success!");
+        });
     }
 }
 
 impl Exec for Ls {
     fn command_execution(&self, stream: TcpType, _flag: String) {
         tokio::spawn(async move {
-            send_command(stream.clone(), String::from("ls")).await;
+            send_command(stream.clone(), LS).await;
 
-            let mut message_len = stream
-                .lock()
-                .await
-                .read_i64()
-                .await
-                .expect("Can't get length");
-
-            let secret = get_secret(stream.clone()).await.expect("Key not sent!");
+            let secret = send_secret(stream.clone()).await.expect("Key not sent!");
 
             println!(
                 "{}",
-                String::from_utf8_lossy(
-                    &get_entries(stream.clone(), &mut message_len, secret).await
-                )
+                String::from_utf8_lossy(&get_entries(stream.clone(), secret).await)
             );
         });
     }
@@ -179,34 +121,5 @@ impl Exec for Ls {
 impl Exec for Exit {
     fn command_execution(&self, _stream: TcpType, _flag: String) {
         process::exit(0x0100);
-    }
-}
-
-async fn errors_fix(stream: TcpType, mut errors: Vec<i64>, file: File, secret: [u8;32]){
-    while errors.len() > 0{
-        for i in (0..errors.len()).rev(){
-            stream.lock().await
-                .write_i64(errors[i]).await
-                .expect("Packet number not sent!");
-            let mut nonce = [0;12];
-            
-            stream.lock().await
-                .read(&mut nonce).await
-                .expect("Nonce not get!");
-
-            let mut data = [0;16400];
-
-            stream.lock().await
-                .read(&mut data).await
-                .expect("Can't get data");
-
-            let bytes = match dec_data(secret, data.to_vec(), nonce) {
-                Ok(data) => {
-                    errors.remove(i);
-                    data
-                },
-                Err(_) => vec![]
-            };
-        }
     }
 }

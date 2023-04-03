@@ -6,7 +6,7 @@ use k256::{ecdh::EphemeralSecret, EncodedPoint, PublicKey};
 use rand_core::OsRng;
 use tokio::net::TcpStream;
 
-pub async fn get_secret(stream: Arc<Mutex<TcpStream>>) -> Result<[u8;32], Box<dyn error::Error>>{
+pub async fn send_secret(stream: Arc<Mutex<TcpStream>>) -> Result<[u8;32], Box<dyn error::Error>>{
     let secret = tokio::spawn(async move{        
         let client_secret = EphemeralSecret::random(&mut OsRng);
 
@@ -17,7 +17,7 @@ pub async fn get_secret(stream: Arc<Mutex<TcpStream>>) -> Result<[u8;32], Box<dy
             .write_all(client_public.as_ref()).await
             .expect("Public key not sent!");
 
-        //get server pub key
+        //get pub key
         let mut server_public = [0;33];
 
         stream.lock().await

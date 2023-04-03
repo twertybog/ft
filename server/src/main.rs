@@ -4,16 +4,19 @@ use tokio::{
     sync::Mutex,
     net::TcpListener,
 };
-mod secret;
 mod commands;
-pub use secret::get_secret;
 pub use api::{gen_nonce, enc_data, dec_data};
 pub use commands::{get_command, Command};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    let listener = TcpListener::bind("192.168.0.13:4956").await?;
+    let args = std::env::args()
+        .nth(1).unwrap_or(String::from("127.0.0.1:4956"));
 
+    println!("Connected to {}", args);
+
+    let listener = TcpListener::bind(&args).await?;
+    
     loop {
         let (socket, _address) = listener.accept().await?;
 
