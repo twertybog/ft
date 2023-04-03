@@ -32,4 +32,4 @@ apple_x86:
 	CC=$(CCAPPLEX86) CXX=$(CXXAPPLEX86) $(RC) $(FLAGS) x86_64-apple-darwin $(MODE)
 
 apple_aarch64:
-	CC=$(CCAPPLEX86) CXX=$(CXXAPPLEARM64) $(RC) $(FLAGS) x86_64-apple-darwin $(MODE)
+	CC=$(CCAPPLEARM64) CXX=$(CXXAPPLEARM64) $(RC) $(FLAGS) aarch64-apple-darwin $(MODE)
