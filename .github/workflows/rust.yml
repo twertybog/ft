@@ -27,6 +27,6 @@ jobs:
     - name: Build ARM64 MacOS
       run: CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnu-g++ cargo +nightly build -Z build-std=std,panic_abort --target aarch64-apple-darwin --release --verbose
     - name: Build x86_64 MacOS
-      run: CC=x86_64-linux-gnu-gcc CXX=x86_64-linux-gnu-g++ cargo +nightly build -Z build-std=std,panic_abort --target aarch64-apple-darwin --release --verbose
+      run: CC=x86_64-linux-gnu-gcc CXX=x86_64-linux-gnu-g++ cargo +nightly build -Z build-std=std,panic_abort --target x86_64-apple-darwin --release --verbose
     - name: Run tests
       run: cargo test --verbose
