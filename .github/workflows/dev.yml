@@ -26,7 +26,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build X86_64 Linux
-      run: cross +nightly build -Z build-std=std,panic_abort --target x86_64-unknown-linux-musl --verbose
+      run: cargo +nightly build -Z build-std=std,panic_abort --target x86_64-unknown-linux-musl --verbose
     
   aarch64-pc-windows-msvc:
     name: Build ARM64 Windows
