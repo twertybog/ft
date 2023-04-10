@@ -10,23 +10,68 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
-
+  aarch64-unknown-linux-musl:
+    name: Build ARM64 Linux
     runs-on: server
 
     steps:
     - uses: actions/checkout@v3
     - name: Build ARM64 Linux
       run: cargo +nightly build --target aarch64-unknown-linux-musl --release --verbose
+
+  x86_64-unknown-linux-musl:
+    needs: aarch64-unknown-linux-musl
+    name: Build X86_64 Linux
+    runs-on: server
+
+    steps:
+    - uses: actions/checkout@v3
     - name: Build X86_64 Linux
       run: cross +nightly build -Z build-std=std,panic_abort --target x86_64-unknown-linux-musl --release --verbose
+    
+  aarch64-pc-windows-msvc:
+    needs: x86_64-unknown-linux-musl
+    name: Build ARM64 Windows
+    runs-on: server
+
+    steps:
+    - uses: actions/checkout@v3
     - name: Build ARM64 Windows
       run: cargo +nightly build -Z build-std=panic_abort --target aarch64-pc-windows-msvc --release --verbose
+  
+  x86_64-pc-windows-msvc:
+    needs: aarch64-pc-windows-msvc
+    name: Build X86_64 Windows
+    runs-on: server
+
+    steps:
     - name: Build X86_64 Windows
       run: cargo +nightly build -Z build-std=panic_abort --target x86_64-pc-windows-msvc --release --verbose
+
+  aarch64-apple-darwin:
+    needs: x86_64-pc-windows-msvc
+    name: Build ARM64 MacOS
+    runs-on: server
+
+    steps:
     - name: Build ARM64 MacOS
       run: CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnu-g++ cargo +nightly build -Z build-std=std,panic_abort --target aarch64-apple-darwin --release --verbose
+
+  x86_64-apple-darwin:
+    needs: aarch64-apple-darwin
+    name: Build X86_64 MacOS
+    runs-on: server
+
+    steps:
+    - uses: actions/checkout@v3    
     - name: Build x86_64 MacOS
       run: CC=x86_64-linux-gnu-gcc CXX=x86_64-linux-gnu-g++ cargo +nightly build -Z build-std=std,panic_abort --target x86_64-apple-darwin --release --verbose
+    
+  test:
+    name: Run tests
+    runs-on: server
+
+    steps:
+    - uses: actions/checkout@v3
     - name: Run tests
-      run: cargo test --verbose
+      run: cargo +nightly test --verbose
