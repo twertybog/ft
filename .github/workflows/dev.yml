@@ -1,0 +1,32 @@
+name: Rust
+
+on:
+  push:
+    branches: [ "dev" ]
+  pull_request:
+    branches: [ "dev" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: server
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build ARM64 Linux
+      run: cargo +nightly build --target aarch64-unknown-linux-musl --verbose
+    - name: Build X86_64 Linux
+      run: cross +nightly build -Z build-std=std,panic_abort --target x86_64-unknown-linux-musl --verbose
+    - name: Build ARM64 Windows
+      run: cargo +nightly build -Z build-std=panic_abort --target aarch64-pc-windows-msvc --verbose
+    - name: Build X86_64 Windows
+      run: cargo +nightly build -Z build-std=panic_abort --target x86_64-pc-windows-msvc --verbose
+    - name: Build ARM64 MacOS
+      run: CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnu-g++ cargo +nightly build -Z build-std=std,panic_abort --target aarch64-apple-darwin --verbose
+    - name: Build x86_64 MacOS
+      run: CC=x86_64-linux-gnu-gcc CXX=x86_64-linux-gnu-g++ cargo +nightly build -Z build-std=std,panic_abort --target x86_64-apple-darwin --verbose
+    - name: Run tests
+      run: cargo +nightly test --verbose
