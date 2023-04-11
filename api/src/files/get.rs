@@ -34,24 +34,28 @@ pub async fn get_file(stream: Arc<Mutex<TcpStream>>, flag: &str) {
         .read(&mut nonce)
         .await
         .expect("Can't get nonce!");
+    let mut bytes = Vec::new();
 
     let mut data = [0; 16400];
+
     while let Ok(n) = stream.lock().await.read_exact(&mut data).await {
         if n == 0 {
             break;
         } else {
-            let mut bytes = match dec_data(secret, data[..n].to_vec(), nonce) {
+            b2f(&bytes, file.try_clone().await.unwrap())
+                .await
+                .expect("Not write in file!");
+            bytes = match dec_data(secret, data[..n].to_vec(), nonce) {
                 Ok(data) => data,
                 Err(_) => {
                     panic!("Data not decrypted!");
                 }
             };
-
-            del_zeros(&mut bytes);
-
-            b2f(&bytes, file.try_clone().await.unwrap())
-                .await
-                .expect("Not write in file!");
         }
     }
+    del_zeros(&mut bytes);
+
+    b2f(&bytes, file.try_clone().await.unwrap())
+        .await
+        .expect("Not write in file!");
 }
