@@ -18,6 +18,15 @@ jobs:
     - uses: actions/checkout@v3
     - name: Build ARM64 Linux
       run: cargo +nightly build --target aarch64-unknown-linux-musl --release --verbose
+    - name: Copy nightly binary
+      run: |
+        mkdir FT
+        cp ./target/aarch64-unknown-linux-musl/release/client ./FT/aarch64-linux-client
+        cp ./target/aarch64-unknown-linux-musl/release/server ./FT/aarch64-server-client
+    - uses: actions/upload-artifact@v3
+      with:
+        name: aarch64-linux
+        path: ./FT
 
   x86_64-unknown-linux-musl:
     needs: aarch64-unknown-linux-musl
@@ -28,7 +37,16 @@ jobs:
     - uses: actions/checkout@v3
     - name: Build X86_64 Linux
       run: cargo +nightly build -Z build-std=std,panic_abort --target x86_64-unknown-linux-musl --release --verbose
-    
+    - name: Copy nightly binary
+      run: |
+        mkdir FT
+        cp ./target/x86_64-unknown-linux-musl/release/client ./FT/x86_64-linux-client
+        cp ./target/x86_64-unknown-linux-musl/release/server ./FT/x86_64-linux-server
+    - uses: actions/upload-artifact@v3
+      with:
+        name: x86_64-linux
+        path: ./FT
+
   aarch64-pc-windows-msvc:
     needs: x86_64-unknown-linux-musl
     name: Build ARM64 Windows
@@ -38,7 +56,16 @@ jobs:
     - uses: actions/checkout@v3
     - name: Build ARM64 Windows
       run: cargo +nightly build -Z build-std=panic_abort --target aarch64-pc-windows-msvc --release --verbose
-  
+    - name: Copy nightly binary
+      run: |
+        mkdir FT
+        cp ./target/aarch64-pc-windows-msvc/release/client.exe ./FT/aarch64-windows-client.exe
+        cp ./target/aarch64-pc-windows-msvc/release/server.exe ./FT/aarch64-windows-server.exe
+    - uses: actions/upload-artifact@v3
+      with:
+        name: aarch64-windows
+        path: ./FT
+
   x86_64-pc-windows-msvc:
     needs: aarch64-pc-windows-msvc
     name: Build X86_64 Windows
@@ -47,6 +74,15 @@ jobs:
     steps:
     - name: Build X86_64 Windows
       run: cargo +nightly build -Z build-std=panic_abort --target x86_64-pc-windows-msvc --release --verbose
+    - name: Copy nightly binary
+      run: |
+        mkdir FT
+        cp ./target/x86_64-pc-windows-msvc/release/client.exe ./FT/x86_64-windows-client.exe
+        cp ./target/x86_64-pc-windows-msvc/release/server.exe ./FT/x86_64-windows-server.exe
+    - uses: actions/upload-artifact@v3
+      with:
+        name: x86_64-windows
+        path: ./FT
 
   aarch64-apple-darwin:
     needs: x86_64-pc-windows-msvc
@@ -55,7 +91,16 @@ jobs:
 
     steps:
     - name: Build ARM64 MacOS
-      run: CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnu-g++ cargo +nightly build -Z build-std=std,panic_abort --target aarch64-apple-darwin --release --verbose
+      run: CC=aarch64-apple-darwin20.2-cc CXX=aarch64-apple-darwin20.2-c++ cargo +nightly build -Z build-std=std,panic_abort --target aarch64-apple-darwin --release --verbose
+    - name: Copy nightly binary
+      run: |
+        mkdir FT
+        cp ./target/aarch64-apple-darwin/release/client ./FT/aarch64-apple-client
+        cp ./target/aarch64-apple-darwin/release/server ./FT/aarch64-apple-server
+    - uses: actions/upload-artifact@v3
+      with:
+        name: aarch64-macos
+        path: ./FT
 
   x86_64-apple-darwin:
     needs: aarch64-apple-darwin
@@ -63,10 +108,19 @@ jobs:
     runs-on: server
 
     steps:
-    - uses: actions/checkout@v3    
+    - uses: actions/checkout@v3
     - name: Build x86_64 MacOS
-      run: CC=x86_64-linux-gnu-gcc CXX=x86_64-linux-gnu-g++ cargo +nightly build -Z build-std=std,panic_abort --target x86_64-apple-darwin --release --verbose
-    
+      run: CC=aarch64-apple-darwin20.2-cc CXX=aarch64-apple-darwin20.2-c++ cargo +nightly build -Z build-std=std,panic_abort --target x86_64-apple-darwin --release --verbose
+    - name: Copy nightly binary
+      run: |
+        mkdir FT
+        cp ./target/x86_64-apple-darwin/release/client ./FT/x86_64-apple-client
+        cp ./target/x86_64-apple-darwin/release/server ./FT/x86_64-apple-server
+    - uses: actions/upload-artifact@v3
+      with:
+        name: x86_64-macos
+        path: ./FT
+
   test:
     name: Run tests
     runs-on: server
