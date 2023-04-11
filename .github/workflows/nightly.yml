@@ -20,13 +20,14 @@ jobs:
       run: cargo +nightly build --target aarch64-unknown-linux-musl --release --verbose
     - name: Copy nightly binary
       run: |
-        mkdir FT
-        cp ./target/aarch64-unknown-linux-musl/release/client ./FT/aarch64-linux-client
-        cp ./target/aarch64-unknown-linux-musl/release/server ./FT/aarch64-server-client
+        cp ./target/aarch64-unknown-linux-musl/release/client aarch64-linux-client
+        cp ./target/aarch64-unknown-linux-musl/release/server aarch64-linux-server
     - uses: actions/upload-artifact@v3
       with:
         name: aarch64-linux
-        path: ./FT
+        path: |
+          aarch64-linux-client
+          aarch64-linux-server
 
   x86_64-unknown-linux-musl:
     name: Build X86_64 Linux
@@ -38,13 +39,16 @@ jobs:
       run: cargo +nightly build -Z build-std=std,panic_abort --target x86_64-unknown-linux-musl --release --verbose
     - name: Copy nightly binary
       run: |
-        mkdir FT
-        cp ./target/x86_64-unknown-linux-musl/release/client ./FT/x86_64-linux-client
-        cp ./target/x86_64-unknown-linux-musl/release/server ./FT/x86_64-linux-server
+        cp ./target/x86_64-unknown-linux-musl/release/client x86_64-linux-client
+        cp ./target/x86_64-unknown-linux-musl/release/server x86_64-linux-server
     - uses: actions/upload-artifact@v3
       with:
         name: x86_64-linux
-        path: ./FT
+        path: |
+          x86_64-linux-client
+          x86_64-linux-server
+    - name: Delete temporary directory
+      run: rm -rf FT
 
   aarch64-pc-windows-msvc:
     name: Build ARM64 Windows
@@ -56,13 +60,14 @@ jobs:
       run: cargo +nightly build -Z build-std=panic_abort --target aarch64-pc-windows-msvc --release --verbose
     - name: Copy nightly binary
       run: |
-        mkdir FT
-        cp ./target/aarch64-pc-windows-msvc/release/client.exe ./FT/aarch64-windows-client.exe
-        cp ./target/aarch64-pc-windows-msvc/release/server.exe ./FT/aarch64-windows-server.exe
+        cp ./target/aarch64-pc-windows-msvc/release/client.exe aarch64-windows-client.exe
+        cp ./target/aarch64-pc-windows-msvc/release/server.exe aarch64-windows-server.exe
     - uses: actions/upload-artifact@v3
       with:
         name: aarch64-windows
-        path: ./FT
+        path: |
+          aarch64-windows-client.exe
+          aarch64-windows-server.exe
 
   x86_64-pc-windows-msvc:
     name: Build X86_64 Windows
@@ -73,13 +78,14 @@ jobs:
       run: cargo +nightly build -Z build-std=panic_abort --target x86_64-pc-windows-msvc --release --verbose
     - name: Copy nightly binary
       run: |
-        mkdir FT
-        cp ./target/x86_64-pc-windows-msvc/release/client.exe ./FT/x86_64-windows-client.exe
-        cp ./target/x86_64-pc-windows-msvc/release/server.exe ./FT/x86_64-windows-server.exe
+        cp ./target/x86_64-pc-windows-msvc/release/client.exe x86_64-windows-client.exe
+        cp ./target/x86_64-pc-windows-msvc/release/server.exe x86_64-windows-server.exe
     - uses: actions/upload-artifact@v3
       with:
         name: x86_64-windows
-        path: ./FT
+        path: |
+          x86_64-windows-client.exe
+          x86_64-windows-server.exe
 
   aarch64-apple-darwin:
     name: Build ARM64 MacOS
@@ -91,12 +97,14 @@ jobs:
     - name: Copy nightly binary
       run: |
         mkdir FT
-        cp ./target/aarch64-apple-darwin/release/client ./FT/aarch64-apple-client
-        cp ./target/aarch64-apple-darwin/release/server ./FT/aarch64-apple-server
+        cp ./target/aarch64-apple-darwin/release/client aarch64-apple-client
+        cp ./target/aarch64-apple-darwin/release/server aarch64-apple-server
     - uses: actions/upload-artifact@v3
       with:
         name: aarch64-macos
-        path: ./FT
+        path: |
+          aarch64-apple-client
+          aarch64-apple-server
 
   x86_64-apple-darwin:
     name: Build X86_64 MacOS
@@ -108,13 +116,14 @@ jobs:
       run: CC=aarch64-apple-darwin20.2-cc CXX=aarch64-apple-darwin20.2-c++ cargo +nightly build -Z build-std=std,panic_abort --target x86_64-apple-darwin --release --verbose
     - name: Copy nightly binary
       run: |
-        mkdir FT
-        cp ./target/x86_64-apple-darwin/release/client ./FT/x86_64-apple-client
-        cp ./target/x86_64-apple-darwin/release/server ./FT/x86_64-apple-server
+        cp ./target/x86_64-apple-darwin/release/client x86_64-apple-client
+        cp ./target/x86_64-apple-darwin/release/server x86_64-apple-server
     - uses: actions/upload-artifact@v3
       with:
         name: x86_64-macos
-        path: ./FT
+        path: |
+          x86_64-apple-client
+          x86_64-apple-server
 
   test:
     name: Run tests
