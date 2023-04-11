@@ -1,4 +1,4 @@
-name: Rust
+name: Nightly
 
 on:
   push:
@@ -24,7 +24,6 @@ jobs:
         cp ./target/aarch64-unknown-linux-musl/release/server aarch64-linux-server
     - uses: actions/upload-artifact@v3
       with:
-        name: aarch64-linux
         path: |
           aarch64-linux-client
           aarch64-linux-server
@@ -43,12 +42,9 @@ jobs:
         cp ./target/x86_64-unknown-linux-musl/release/server x86_64-linux-server
     - uses: actions/upload-artifact@v3
       with:
-        name: x86_64-linux
         path: |
           x86_64-linux-client
           x86_64-linux-server
-    - name: Delete temporary directory
-      run: rm -rf FT
 
   aarch64-pc-windows-msvc:
     name: Build ARM64 Windows
@@ -64,7 +60,6 @@ jobs:
         cp ./target/aarch64-pc-windows-msvc/release/server.exe aarch64-windows-server.exe
     - uses: actions/upload-artifact@v3
       with:
-        name: aarch64-windows
         path: |
           aarch64-windows-client.exe
           aarch64-windows-server.exe
@@ -82,7 +77,6 @@ jobs:
         cp ./target/x86_64-pc-windows-msvc/release/server.exe x86_64-windows-server.exe
     - uses: actions/upload-artifact@v3
       with:
-        name: x86_64-windows
         path: |
           x86_64-windows-client.exe
           x86_64-windows-server.exe
@@ -96,12 +90,10 @@ jobs:
       run: CC=aarch64-apple-darwin20.2-cc CXX=aarch64-apple-darwin20.2-c++ cargo +nightly build -Z build-std=std,panic_abort --target aarch64-apple-darwin --release --verbose
     - name: Copy nightly binary
       run: |
-        mkdir FT
         cp ./target/aarch64-apple-darwin/release/client aarch64-apple-client
         cp ./target/aarch64-apple-darwin/release/server aarch64-apple-server
     - uses: actions/upload-artifact@v3
       with:
-        name: aarch64-macos
         path: |
           aarch64-apple-client
           aarch64-apple-server
@@ -120,7 +112,6 @@ jobs:
         cp ./target/x86_64-apple-darwin/release/server x86_64-apple-server
     - uses: actions/upload-artifact@v3
       with:
-        name: x86_64-macos
         path: |
           x86_64-apple-client
           x86_64-apple-server
